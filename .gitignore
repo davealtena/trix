@@ -1,24 +1,24 @@
-  # Binary
-  trix
+# Binary
+trix
 
-  # Go build cache
-  *.exe
-  *.exe~
-  *.dll
-  *.so
-  *.dylib
-  *.test
-  *.out
+# Go build cache
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
 
-  # IDE
-  .idea/
-  .vscode/
-  *.swp
-  *.swo
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 
-  # OS
-  .DS_Store
-  Thumbs.db
+# OS
+.DS_Store
+Thumbs.db
 
-  *.local.yaml
-  .env
+*.local.yaml
+.env
