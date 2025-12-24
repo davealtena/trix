@@ -9,7 +9,7 @@
 
   <p>
     <a href="https://github.com/davealtena/trix/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
-    <a href="https://golang.org/"><img src="https://img.shields.io/badge/Go-1.21+-00ADD8.svg" alt="Go Version"></a>
+    <a href="https://golang.org/"><img src="https://img.shields.io/badge/Go-1.24+-00ADD8.svg" alt="Go Version"></a>
   </p>
 
   <p>
