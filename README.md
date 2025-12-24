@@ -8,19 +8,41 @@
   </p>
 
   <p>
-    <a href="https://github.com/davealtena/trix/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
-    <a href="https://golang.org/"><img src="https://img.shields.io/badge/Go-1.24+-00ADD8.svg" alt="Go Version"></a>
+    <a href="https://go.dev/"><img src="https://img.shields.io/github/go-mod/go-version/davealtena/trix" alt="Go Version"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/github/license/davealtena/trix" alt="License"></a>
+    <a href="https://goreportcard.com/report/github.com/davealtena/trix"><img src="https://goreportcard.com/badge/github.com/davealtena/trix" alt="Go Report Card"></a>
+    <a href="https://github.com/davealtena/trix/releases"><img src="https://img.shields.io/github/v/release/davealtena/trix?include_prereleases" alt="Release"></a>
   </p>
 
   <p>
-    <a href="#how-it-works"><strong>How it Works</strong></a> |
+    <a href="#features"><strong>Features</strong></a> |
     <a href="#installation"><strong>Installation</strong></a> |
     <a href="#usage"><strong>Usage</strong></a> |
-    <a href="#ai-powered-investigation"><strong>AI Investigation</strong></a>
+    <a href="#ai-powered-investigation"><strong>AI Investigation</strong></a> |
+    <a href="#roadmap"><strong>Roadmap</strong></a>
   </p>
 </div>
 
 ---
+
+## Features
+
+- **Query Security Findings** - Browse vulnerabilities, compliance issues, RBAC problems, and exposed secrets
+- **AI-Powered Investigation** - Ask questions in natural language and get actionable remediation advice
+- **SBOM Search** - Find specific packages across all container images (e.g., log4j)
+- **NetworkPolicy Analysis** - Identify pods without network protection
+- **Interactive Mode** - Have follow-up conversations about your security posture
+- **BYOK (Bring Your Own Key)** - Your data stays between you and your LLM provider
+- **Multiple Output Formats** - Human-readable tables or JSON for automation
+
+## Supported Tools
+
+| Tool | Status | Description |
+|------|--------|-------------|
+| Trivy Operator | ✅ Supported | Vulnerabilities, compliance, RBAC, secrets, SBOM |
+| Kubescape | 🔜 Planned | NSA/CISA hardening checks |
+| Kyverno | 🔜 Planned | Policy violations |
+| Falco | 🔜 Planned | Runtime security events |
 
 ## How it Works
 
@@ -207,14 +229,21 @@ Use `--model` to specify a model:
 trix ask "..." --model claude-sonnet-4-20250514
 ```
 
-## Data Sources
+## Roadmap
 
-| Source | Status | Notes |
-|--------|--------|-------|
-| Trivy Operator | Supported | Vulnerabilities, compliance, RBAC, secrets, SBOM |
-| Kubernetes | Supported | NetworkPolicy coverage analysis |
-| Kyverno | Planned | Policy violations |
-| Falco | Planned | Runtime security events |
+- **Multi-LLM Support** - OpenAI, Ollama (local models)
+- **Agent Mode** - Scheduled alerts and automated security reports
+- **Helm Chart** - Easy deployment and configuration
+- **More Security Tools** - Kubescape, Kyverno, Falco integrations
+- **Webhook Integrations** - Slack, Teams, PagerDuty notifications
+
+## Contributing
+
+Contributions are welcome! Please feel free to:
+
+- [Open an issue](https://github.com/davealtena/trix/issues) for bugs or feature requests
+- [Start a discussion](https://github.com/davealtena/trix/discussions) for questions or ideas
+- Submit a pull request
 
 ## License
 
