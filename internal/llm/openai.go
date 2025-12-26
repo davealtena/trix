@@ -5,42 +5,59 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/openai/openai-go" // imported as openai
+	"github.com/openai/openai-go"
 )
 
+// OpenAIClient implements the Client interface for OpenAI's Chat API.
 type OpenAIClient struct {
 	client openai.Client
 }
 
+// NewOpenAIClient creates a new OpenAI client.
+// It reads the API key from the OPENAI_API_KEY environment variable.
 func NewOpenAIClient() (*OpenAIClient, error) {
 	return &OpenAIClient{
 		client: openai.NewClient(),
 	}, nil
 }
 
-// Chat sends messages to OpenAI and returns the response
+// Chat sends messages to OpenAI and returns the response.
 func (c *OpenAIClient) Chat(ctx context.Context, messages []Message, tools []Tool) (*Response, error) {
-	// ===== STEP 1: Convert your Messages to OpenAI format =====
-	var openaiMessages []openai.ChatCompletionMessageParamUnion
+	openaiMessages := convertMessages(messages)
+	openaiTools := convertTools(tools)
+
+	params := openai.ChatCompletionNewParams{
+		Messages: openaiMessages,
+		Model:    "gpt-4o",
+	}
+	if len(openaiTools) > 0 {
+		params.Tools = openaiTools
+	}
+
+	resp, err := c.client.Chat.Completions.New(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+
+	return parseResponse(resp), nil
+}
+
+// convertMessages converts generic Messages to OpenAI's message format.
+func convertMessages(messages []Message) []openai.ChatCompletionMessageParamUnion {
+	var result []openai.ChatCompletionMessageParamUnion
 
 	for _, msg := range messages {
 		switch msg.Role {
 		case RoleSystem:
-			// System message: instructions for the AI
-			openaiMessages = append(openaiMessages, openai.SystemMessage(msg.Content))
+			result = append(result, openai.SystemMessage(msg.Content))
 
 		case RoleUser:
-			// User message: what the user is asking
-			openaiMessages = append(openaiMessages, openai.UserMessage(msg.Content))
+			result = append(result, openai.UserMessage(msg.Content))
 
 		case RoleAssistant:
-			// Assistant message: previous AI response
-			// If the assistant made tool calls, we need to include those
 			if len(msg.ToolCalls) > 0 {
-				// Build tool calls array for OpenAI
 				var toolCalls []openai.ChatCompletionMessageToolCallParam
 				for _, tc := range msg.ToolCalls {
-					// Convert parameters to JSON string (OpenAI expects raw JSON)
 					argsJSON, _ := json.Marshal(tc.Parameters)
 					toolCalls = append(toolCalls, openai.ChatCompletionMessageToolCallParam{
 						ID:   tc.ID,
@@ -51,26 +68,29 @@ func (c *OpenAIClient) Chat(ctx context.Context, messages []Message, tools []Too
 						},
 					})
 				}
-				// Build assistant message with tool calls directly
-				openaiMessages = append(openaiMessages, openai.ChatCompletionMessageParamUnion{
+				result = append(result, openai.ChatCompletionMessageParamUnion{
 					OfAssistant: &openai.ChatCompletionAssistantMessageParam{
 						ToolCalls: toolCalls,
 					},
 				})
 			} else {
-				openaiMessages = append(openaiMessages, openai.AssistantMessage(msg.Content))
+				result = append(result, openai.AssistantMessage(msg.Content))
 			}
 
 		case RoleTool:
-			// Tool result: return the result of a tool call back to the AI
-			openaiMessages = append(openaiMessages, openai.ToolMessage(msg.Content, msg.ToolCallID))
+			result = append(result, openai.ToolMessage(msg.Content, msg.ToolCallID))
 		}
 	}
 
-	// ===== STEP 2: Convert your Tools to OpenAI format =====
-	var openaiTools []openai.ChatCompletionToolParam
+	return result
+}
+
+// convertTools converts generic Tools to OpenAI's tool format.
+func convertTools(tools []Tool) []openai.ChatCompletionToolParam {
+	var result []openai.ChatCompletionToolParam
+
 	for _, tool := range tools {
-		openaiTools = append(openaiTools, openai.ChatCompletionToolParam{
+		result = append(result, openai.ChatCompletionToolParam{
 			Type: "function",
 			Function: openai.FunctionDefinitionParam{
 				Name:        tool.Name,
@@ -80,22 +100,11 @@ func (c *OpenAIClient) Chat(ctx context.Context, messages []Message, tools []Too
 		})
 	}
 
-	// ===== STEP 3: Call the OpenAI API =====
-	params := openai.ChatCompletionNewParams{
-		Messages: openaiMessages,
-		Model:    "gpt-4o",
-	}
-	// Only add tools if there are any
-	if len(openaiTools) > 0 {
-		params.Tools = openaiTools
-	}
+	return result
+}
 
-	resp, err := c.client.Chat.Completions.New(ctx, params)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-
-	// ===== STEP 4: Convert OpenAI response to your Response type =====
+// parseResponse converts OpenAI's response to the generic Response type.
+func parseResponse(resp *openai.ChatCompletion) *Response {
 	response := &Response{
 		Content: resp.Choices[0].Message.Content,
 		Usage: Usage{
@@ -104,9 +113,7 @@ func (c *OpenAIClient) Chat(ctx context.Context, messages []Message, tools []Too
 		},
 	}
 
-	// Convert tool calls from OpenAI format to your format
 	for _, tc := range resp.Choices[0].Message.ToolCalls {
-		// Parse JSON arguments back into a map
 		var params map[string]interface{}
 		if err := json.Unmarshal([]byte(tc.Function.Arguments), &params); err != nil {
 			params = make(map[string]interface{})
@@ -119,5 +126,5 @@ func (c *OpenAIClient) Chat(ctx context.Context, messages []Message, tools []Too
 		})
 	}
 
-	return response, nil
+	return response
 }
