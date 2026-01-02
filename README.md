@@ -188,7 +188,10 @@ export ANTHROPIC_API_KEY=your-key-here
 # Option 2: OpenAI GPT
 export OPENAI_API_KEY=your-key-here
 
-# Option 3: Ollama (local, experimental)
+# Option 3: Mistral AI (EU-based)
+export MISTRAL_API_KEY=your-key-here
+
+# Option 4: Ollama (local, experimental)
 export OLLAMA_HOST=http://localhost:11434
 ```
 
@@ -236,13 +239,17 @@ Update the golang.org/x/crypto package to version 0.31.0 or later...
 |----------|--------|---------------------|
 | Anthropic (Claude) | Supported | `ANTHROPIC_API_KEY` |
 | OpenAI (GPT-4) | Supported | `OPENAI_API_KEY` |
+| Mistral AI | Supported | `MISTRAL_API_KEY` |
 | Ollama (local) | Experimental | `OLLAMA_HOST` |
+
+> **EU Data Sovereignty:** Mistral AI is a French company with EU-based infrastructure. Use `--provider mistral` for EU data residency requirements.
 
 Use `--provider` to explicitly select a provider:
 
 ```bash
 trix ask "..." --provider anthropic
 trix ask "..." --provider openai
+trix ask "..." --provider mistral
 trix ask "..." --provider ollama --model llama3.1:8b
 ```
 
