@@ -207,12 +207,8 @@ func (c *MistralClient) convertTools(tools []Tool) []mistralTool {
 
 	for _, tool := range tools {
 		result = append(result, mistralTool{
-			Type: "function",
-			Function: mistralFunction{
-				Name:        tool.Name,
-				Description: tool.Description,
-				Parameters:  tool.Parameters,
-			},
+			Type:     "function",
+			Function: mistralFunction(tool),
 		})
 	}
 
