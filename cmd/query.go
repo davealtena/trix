@@ -8,6 +8,7 @@ import (
 
 	"github.com/davealtena/trix/internal/tools/kubectl"
 	"github.com/davealtena/trix/internal/tools/trivy"
+	"github.com/davealtena/trix/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -381,10 +382,27 @@ var queryFindingsCmd = &cobra.Command{
 			}
 			fmt.Println(string(jsonData))
 		} else {
-			fmt.Printf("\nFound %d total findings:\n", len(allFindings))
-			for i, f := range allFindings {
-				fmt.Printf("%d. [%s] %s - %s (%s)\n", i+1, f.Severity, f.Type, f.Title, f.ResourceName)
+			// Build table output
+			table := ui.NewTable("Severity", "Type", "Title", "Resource")
+
+			// Limit to first 50 for readability
+			limit := 50
+			if len(allFindings) < limit {
+				limit = len(allFindings)
 			}
+
+			for _, f := range allFindings[:limit] {
+				// Truncate title if too long
+				title := f.Title
+				if len(title) > 40 {
+					title = title[:37] + "..."
+				}
+				table.AddRow(string(f.Severity), string(f.Type), title, f.ResourceName)
+			}
+
+			// Render in a box
+			header := fmt.Sprintf("Findings (%d of %d)", limit, len(allFindings))
+			fmt.Println(ui.Box(header, table.Render(), 100))
 		}
 	},
 }
@@ -492,32 +510,38 @@ var querySummaryCmd = &cobra.Command{
 			return
 		}
 
-		// Text output
-		fmt.Printf("Security Findings Summary\n")
-		fmt.Printf("=========================\n\n")
+		// Build styled output using ui package
+		var content strings.Builder
 
-		fmt.Printf("Total Findings: %d\n\n", len(allFindings))
+		// Total count
+		content.WriteString(fmt.Sprintf("Total Findings: %s\n\n", ui.Info.Render(fmt.Sprintf("%d", len(allFindings)))))
 
-		fmt.Printf("By Severity:\n")
+		// By Severity section
+		content.WriteString(ui.Section("By Severity") + "\n")
 		for _, sev := range []string{"CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"} {
 			if count, ok := bySeverity[sev]; ok {
-				fmt.Printf("  %-10s %d\n", sev+":", count)
+				content.WriteString(ui.SeverityLine(sev, count) + "\n")
 			}
 		}
 
-		fmt.Printf("\nBy Type:\n")
+		// By Type section
+		content.WriteString("\n" + ui.Section("By Type") + "\n")
 		for _, typ := range []string{"vulnerability", "compliance", "rbac", "secret", "infra", "benchmark"} {
 			if count, ok := byType[typ]; ok {
-				fmt.Printf("  %-15s %d\n", typ+":", count)
+				content.WriteString(ui.TypeLine(typ, count) + "\n")
 			}
 		}
 
+		// Top Resources section
 		if len(topResources) > 0 {
-			fmt.Printf("\nTop Affected Resources:\n")
+			content.WriteString("\n" + ui.Section("Top Affected Resources") + "\n")
 			for _, rc := range topResources {
-				fmt.Printf("  %s - %d findings\n", rc.Resource, rc.Count)
+				content.WriteString(ui.ResourceLine(rc.Resource, rc.Count, 40) + "\n")
 			}
 		}
+
+		// Wrap in a box and print
+		fmt.Println(ui.Box("Security Findings Summary", content.String(), 60))
 	},
 }
 
