@@ -35,6 +35,7 @@ Examples:
 Providers:
   anthropic  - Requires ANTHROPIC_API_KEY
   openai     - Requires OPENAI_API_KEY
+  mistral    - Requires MISTRAL_API_KEY (EU-based)
   ollama     - Local/remote Ollama (set OLLAMA_HOST or use --ollama-url)`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -131,6 +132,7 @@ func createLLMClient() (llm.Client, error) {
 	if provider == "" {
 		hasAnthropic := os.Getenv("ANTHROPIC_API_KEY") != ""
 		hasOpenAI := os.Getenv("OPENAI_API_KEY") != ""
+		hasMistral := os.Getenv("MISTRAL_API_KEY") != ""
 		hasOllama := os.Getenv("OLLAMA_HOST") != "" || ollamaURL != ""
 
 		// Count how many providers are available
@@ -143,16 +145,20 @@ func createLLMClient() (llm.Client, error) {
 			count++
 			provider = "openai"
 		}
+		if hasMistral {
+			count++
+			provider = "mistral"
+		}
 		if hasOllama {
 			count++
 			provider = "ollama"
 		}
 
 		if count > 1 {
-			return nil, fmt.Errorf("multiple providers available. Use --provider to choose (anthropic, openai, ollama)")
+			return nil, fmt.Errorf("multiple providers available. Use --provider to choose (anthropic, openai, mistral, ollama)")
 		}
 		if count == 0 {
-			return nil, fmt.Errorf("no provider configured. Set ANTHROPIC_API_KEY, OPENAI_API_KEY, or OLLAMA_HOST")
+			return nil, fmt.Errorf("no provider configured. Set ANTHROPIC_API_KEY, OPENAI_API_KEY, MISTRAL_API_KEY, or OLLAMA_HOST")
 		}
 	}
 
@@ -161,10 +167,12 @@ func createLLMClient() (llm.Client, error) {
 		return llm.NewAnthropicClient(llmModel)
 	case "openai":
 		return llm.NewOpenAIClient(llmModel)
+	case "mistral":
+		return llm.NewMistralClient(llmModel)
 	case "ollama":
 		return llm.NewOllamaClient(ollamaURL, llmModel)
 	default:
-		return nil, fmt.Errorf("unknown provider: %s (use 'anthropic', 'openai', or 'ollama')", provider)
+		return nil, fmt.Errorf("unknown provider: %s (use 'anthropic', 'openai', 'mistral', or 'ollama')", provider)
 	}
 }
 
